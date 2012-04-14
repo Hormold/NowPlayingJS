@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <title> Now Playing </title>
+  <meta name="Generator" content="EditPlus">
+  <meta name="Author" content="Hormold">
+  <meta name="Keywords" content="Hormold, Now Playing, Javascript, Last.FM">
+  <meta name="Description" content="Now Playing. Powered by JS/JQuery and Last.FM">
+  <script src="jquery.js" type="text/javascript"></script>
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700' rel='stylesheet' type='text/css'>
+
+  <style>
+	#header {
+		position:absolute;
+		top:35%;
+		left:05%;
+		font-family: "Gill Sans", "Arial", "Helvetica", sans-serif;
+		font-weight: normal;
+		font-size: 4em;
+		margin: 0.3em 0;
+		color: black;
+		border: none !important;
+	}
+	#img{
+		position:relative;
+		top:-40px;
+		left:-30px;
+	}
+	#title{display:none;font-family: 'Open Sans Condensed', sans-serif;
+text-align:center; font-size:5em;font-weight:italic;}
+	.link{
+		text-decoration: none;
+		color:black;
+	}
+	.space{margin-left: 40px;}
+	#play{display:none;opacity:0.4;position:absolute; top:10px;}
+  </style>
+  <script>
+  ///ver 21-55
+    var user="Hormold"; //name on Last.FM
+	var time=10; //in sec.
+	var set=0;var req=0;var url2="";var nowp=0;var audioElement = document.createElement('audio');
+	function update(){
+		var url="http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user="+user+"&api_key=045b5abc7cd8a33e5e040e11ce5224a5&rand="+Math.random();
+		$.get(url, function(data) {
+			parse($(data));
+		});
+		setTimeout(update,10000);
+	}
+	
+	function parse($xml){
+		$xml.find("track").each(function() {
+				var $this = $(this);
+				id=$(this).attr('nowplaying');if(id==undefined){id="false";}
+				if(id=="true"){
+					art=$this.find("artist").text();
+					name=$this.find("name").text();
+					$("#text").html("<a href='http://last.fm/music/"+art+"' class='link' target='_blank'>"+art+"</a> — <br /> <span class='space'>&nbsp;</span>"+name);
+					check(art,name);
+				}else{}
+			});
+	}
+
+	function check(art,name){
+		url="http://developer.echonest.com/api/v4/song/search?api_key=N6E4NIOVYMTHNDM8J&format=json&results=1&artist="+art+"&title="+name+"&bucket=id:7digital-US&bucket=audio_summary&bucket=tracks";
+		$.get(url, function(data) {
+			if(data.response.songs[0].tracks !== undefined){
+				url2=data.response.songs[0].tracks[0].preview_url;
+				$("#play").show();
+			}else{
+				$("#play").hide();
+			}
+		});
+	}
+	
+	function play(){
+		console.log(url2+","+nowp+",");
+		if(url2!==""){
+			if(nowp==1){console.log(nowp);audioElement.pause();nowp=0;}else{
+			audioElement.setAttribute('src', url2);
+			audioElement.play();
+			audioElement.addEventListener('ended', function(){nowp=0;}, false);
+			nowp=1;}
+		}else{
+			$("#title").html("ERROR?");
+			$("#title").fadeIn(1000);
+			$("#title").fadeOut(500);
+			$("#title").html("NOW PLAYING:");
+		}
+	}
+  </script>
+ </head>
+
+ <body onLoad="update();">
+ <div id="title">NOW PLAYING:</div>
+ <div id="player"><a href="javascript:play();"><img src="play.png" width="16px" id="play" /></a></div>
+  <div id="header"><a href="#me" id="link" target="_blank"><img src="lfm2.png" width="55px" id="img" /></a><span id="text">Now - nothing playing :-(</span></div>
+  <script>
+  $("#link").attr("href","http://last.fm/user/"+user);
+  $("#text").hover(
+  function () {
+   $("#title").fadeIn(1000);
+   $("#title").fadeOut(1000);
+  });
+  </script>
+ </body>
+</html>
